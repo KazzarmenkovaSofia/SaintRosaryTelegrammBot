@@ -21,8 +21,12 @@ from aiogram.types import FSInputFile
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
 
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1")
-client = OpenAI(api_key=TOGETHER_API_KEY)
+TOGETHER_API_KEY = "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1"
+
+client = OpenAI(
+    api_key=TOGETHER_API_KEY,
+    base_url="https://api.together.xyz/v1"
+)
 # Создаем объекты бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -181,10 +185,8 @@ pray_keyboard = InlineKeyboardMarkup(
 
 # Получение новостей
 def get_news_links():
-    import requests
-    from bs4 import BeautifulSoup
-    from datetime import datetime
-
+    current_date = datetime.now()
+    formatted_date = current_date.strftime('%Y-%m')
     url = 'https://www.vaticannews.va/ru.html'
     response = requests.get(url)
     response.encoding = 'utf-8'
@@ -193,56 +195,42 @@ def get_news_links():
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        articles = soup.find_all('a', href=True)
+        articles = soup.find_all('a', href=True, title=True)
 
         for article in articles:
-            href = article['href']
-            # Отбираем только ссылки на новости на русском
-            if '/ru/' in href and href.startswith('/'):
-                full_link = f"https://www.vaticannews.va{href}"
-                if full_link not in links:
-                    links.append(full_link)
+            link = f"https://www.vaticannews.va{article['href']}"
+            if f'/ru/pope/news/{formatted_date}' in link and link not in links:
+                links.append(link)
 
-    # Ограничиваем максимум 10 ссылками
-    return links[:10]
-
-# Для проверки
-links = get_news_links()
-print("Собранные ссылки:", links)
+    return links
 
 
 
 # Вызов AI
 def generate_prayers(links):
-    if not links:
-        return "⚠️ Не удалось собрать ссылки для формирования молитв."
-
     joined_links = "\n\n".join(links)
 
-    try:
-        response = client.chat.completions.create(
-            model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        "Read the following news articles, excluding irrelevant events from the perspective of Catholicism. "
-                        "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
-                        "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
-                        "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
-                        "Avoid breaking the text into separate words or elements. "
-                        "The prayer should express a desire for peace, blessings, and help for those in need. "
-                        "Provide the result in a clean, readable text format with clear prayer intentions:\n\n"
-                        f"{joined_links}\n\n"
-                        "Write your result en spanish without numeration and finish with 'Amén'."
-                    )
-                }
-            ]
-        )
-        return response.choices[0].message["content"].strip()
-    except Exception as e:
-        return f"🚫 Ошибка при генерации молитвы: {e}"
+    response = client.chat.completions.create(
+        model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    "Read the following news articles, excluding irrelevant events from the perspective of Catholicism. "
+                    "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
+                    "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
+                    "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
+                    "Avoid breaking the text into separate words or elements. "
+                    "The prayer should express a desire for peace, blessings, and help for those in need. "
+                    "Provide the result in a clean, readable text format with clear prayer intentions:\n\n"
+                    f"{joined_links}\n\n"
+                    "Write your result en spanish without numeration and finish with 'Amén'."
+                )
+            }
+        ]
+    )
 
+    return response.choices[0].message.content.strip()
 
 # Создаем асинхронную функцию
 async def set_main_menu(bot: Bot):
@@ -454,6 +442,7 @@ async def send_prayers(callback: CallbackQuery):
         await callback.message.edit_text("🚫 Произошла ошибка при генерации молитвы. Попробуй позже.", reply_markup=peticiones_dia_keyboard)
 
 
+
 # Обработчик для изменения языка
 @dp.callback_query(F.data == "combiar_vercion")
 async def ask_question(query):
@@ -659,6 +648,7 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
 
 
