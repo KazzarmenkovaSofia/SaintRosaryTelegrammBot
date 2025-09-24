@@ -13,7 +13,7 @@ import asyncio
 from bs4 import BeautifulSoup
 from aiogram.enums import ParseMode
 from aiogram.filters import Command
-from openai import OpenAI
+import openai
 import os
 from aiogram import Bot, types
 from aiogram.types import FSInputFile
@@ -646,4 +646,5 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
