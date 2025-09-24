@@ -218,29 +218,35 @@ print("Собранные ссылки:", links)
 
 # Вызов AI
 def generate_prayers(links):
+    if not links:
+        return "⚠️ Не удалось собрать ссылки для формирования молитв."
+
     joined_links = "\n\n".join(links)
 
-    response = client.chat.completions.create(
-        model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        messages=[
-            {
-                "role": "user",
-                "content": (
-                    "Read the following news articles, excluding irrelevant events from the perspective of Catholicism. "
-                    "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
-                    "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
-                    "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
-                    "Avoid breaking the text into separate words or elements. "
-                    "The prayer should express a desire for peace, blessings, and help for those in need. "
-                    "Provide the result in a clean, readable text format with clear prayer intentions:\n\n"
-                    f"{joined_links}\n\n"
-                    "Write your result en spanish without numeration and finish with 'Amén'."
-                )
-            }
-        ]
-    )
+    try:
+        response = client.chat.completions.create(
+            model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        "Read the following news articles, excluding irrelevant events from the perspective of Catholicism. "
+                        "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
+                        "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
+                        "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
+                        "Avoid breaking the text into separate words or elements. "
+                        "The prayer should express a desire for peace, blessings, and help for those in need. "
+                        "Provide the result in a clean, readable text format with clear prayer intentions:\n\n"
+                        f"{joined_links}\n\n"
+                        "Write your result en spanish without numeration and finish with 'Amén'."
+                    )
+                }
+            ]
+        )
+        return response.choices[0].message["content"].strip()
+    except Exception as e:
+        return f"🚫 Ошибка при генерации молитвы: {e}"
 
-    answer = response.choices[0].message.content
 
 # Создаем асинхронную функцию
 async def set_main_menu(bot: Bot):
@@ -657,6 +663,7 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
 
 
