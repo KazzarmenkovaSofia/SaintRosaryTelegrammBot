@@ -185,8 +185,10 @@ pray_keyboard = InlineKeyboardMarkup(
 
 # Получение новостей
 def get_news_links():
-    current_date = datetime.now()
-    formatted_date = current_date.strftime('%Y-%m')
+    import requests
+    from bs4 import BeautifulSoup
+    from datetime import datetime
+
     url = 'https://www.vaticannews.va/ru.html'
     response = requests.get(url)
     response.encoding = 'utf-8'
@@ -195,14 +197,23 @@ def get_news_links():
 
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        articles = soup.find_all('a', href=True, title=True)
+        articles = soup.find_all('a', href=True)
 
         for article in articles:
-            link = f"https://www.vaticannews.va{article['href']}"
-            if f'/ru/pope/news/{formatted_date}' in link and link not in links:
-                links.append(link)
+            href = article['href']
+            # Отбираем только ссылки на новости на русском
+            if '/ru/' in href and href.startswith('/'):
+                full_link = f"https://www.vaticannews.va{href}"
+                if full_link not in links:
+                    links.append(full_link)
 
-    return links
+    # Ограничиваем максимум 10 ссылками
+    return links[:10]
+
+# Для проверки
+links = get_news_links()
+print("Собранные ссылки:", links)
+
 
 
 # Вызов AI
@@ -646,6 +657,7 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
 
 
