@@ -351,16 +351,11 @@ async def answer(callback: CallbackQuery):
         orarCombiar['perSigniumcrucis'] = True
         oracionVercion = "original"
 
-        # Путь к изображению
-        image_path = os.path.join(os.path.dirname(__file__), r'C:\Users\Sofia Nieto\Desktop\persignum.jpg')
-
-        # Создание объекта InputFile
-        photo = FSInputFile(image_path)
-
+        # Send image with prayer text as caption
+        photo = FSInputFile("persignum.jpg")
         await callback.message.answer_photo(photo, caption=f'{rosario.perSigniumcrucis[language]}', reply_markup=porSignum_keyboard)
     else:
         await callback.message.answer(text=f'El comando de oración ya está en ejecución. Para continuar, haga clic en "Continuar"', reply_markup=keyboard)
-
 
 @dp.callback_query(F.data == 'continuar_pressed')
 async def answer(callback: CallbackQuery):
@@ -651,3 +646,4 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
