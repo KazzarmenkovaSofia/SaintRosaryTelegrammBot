@@ -21,12 +21,10 @@ from aiogram.types import FSInputFile
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
 
-TOGETHER_API_KEY = "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1"
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1")
 
-client = OpenAI(
-    api_key=TOGETHER_API_KEY,
-    base_url="https://api.together.xyz/v1"
-)
+openai.api_key = TOGETHER_API_KEY
+openai.base_url = "https://api.together.xyz/v1"
 # Создаем объекты бота и диспетчера
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -229,7 +227,7 @@ def generate_prayers(links):
         ]
     )
 
-    return response.choices[0].message.content.strip()
+    return response.choices[0].message["content"].strip()
 
 # Создаем асинхронную функцию
 async def set_main_menu(bot: Bot):
@@ -646,5 +644,6 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
 
