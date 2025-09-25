@@ -150,25 +150,62 @@ async def language_callback(callback: CallbackQuery):
 # ================== Логика молитвы ==================
 @dp.callback_query(F.data == 'pray_pressed')
 async def start_prayer(callback: CallbackQuery):
-    global m_type, message_list, orarCombiar, oracionVercion
     user_id = callback.from_user.id
+    logging.info(f"Пользователь {user_id} нажал 'pray_pressed'")
+
+    # Определяем тип таинства
     m_type = get_mystery_type()
-    messages = [
+
+    # Формируем список сообщений для молитвы
+    message_list = [
         rosario.mysteries[m_type][language],
         rosario.paterNoster[language],
         rosario.gloria[language],
         rosario.oratioFatimae[language],
         rosario.MariaMadreDeGracia[language]
     ]
-    user_state[user_id] = {
-        'in_pray': True,
-        'message_list': messages,
-        'current_message': 0,
-        'cycle': 0
-    }
-    photo = FSInputFile("persignum.jpg")
-    await callback.message.answer_photo(photo, caption=f'{rosario.perSigniumcrucis[language]}', reply_markup=keyboard)
+
+    # Создаём состояние пользователя, если его нет
+    if user_id not in user_state:
+        user_state[user_id] = {
+            'in_pray': True,
+            'pray_done': False,
+            'cycleOraciones': False,
+            'current_message': 0,
+            'cycle': 0,
+            'mystery_index': 0,
+            'message_list': message_list,
+            'orarCombiar': {'perSigniumcrucis': True, 'padre': False},
+            'oracionVercion': 'original',
+            'aveMtimes': 0
+        }
+
+    state = user_state[user_id]
+
+    if state['in_pray']:
+        # Отправляем фото с подписью
+        try:
+            photo = FSInputFile("persignum.jpg")
+            await callback.message.answer_photo(
+                photo=photo,
+                caption=f'{rosario.perSigniumcrucis[language]}',
+                reply_markup=porSignum_keyboard
+            )
+        except Exception as e:
+            logging.error(f"Ошибка при отправке фото: {e}")
+            # Если фото не найдено, отправляем текст
+            await callback.message.answer(
+                text=f'{rosario.perSigniumcrucis[language]}',
+                reply_markup=porSignum_keyboard
+            )
+    else:
+        await callback.message.answer(
+            text='El comando de oración ya está en ejecución. Para continuar, haga clic en "Continuar"',
+            reply_markup=keyboard
+        )
+
     await callback.answer()
+
 
 # ================== Peticiones ==================
 @dp.callback_query(F.data == 'peticiones_pressed')
@@ -250,5 +287,6 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 8080))
     web.run_app(app, host="0.0.0.0", port=port)
+
 
 
