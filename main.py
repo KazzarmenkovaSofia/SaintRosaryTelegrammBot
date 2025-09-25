@@ -720,8 +720,30 @@ async def process_start_command_for_all_users():
         await asyncio.sleep(60)  # Проверяем каждую минуту
 
 if __name__ == '__main__':
-    dp.startup.register(on_startup)
-    dp.run_polling(bot)
+    import asyncio
+    from aiohttp import web
+
+    async def handle(request):
+        return web.Response(text="Bot is running")
+
+    app = web.Application()
+    app.router.add_get("/", handle)
+
+    async def main():
+        # Запускаем бота в фоне
+        asyncio.create_task(dp.start_polling(bot))
+        # Запускаем aiohttp сервер для рендера
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, '0.0.0.0', 8080)
+        await site.start()
+        print("Bot is running...")
+        while True:
+            await asyncio.sleep(3600)
+
+    asyncio.run(main())
+
+
 
 
 
