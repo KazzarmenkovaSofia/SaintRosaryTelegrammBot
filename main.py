@@ -719,6 +719,8 @@ async def process_start_command_for_all_users():
                     logging.error(f"Error enviando notificación a {user_id}: {e}")
         await asyncio.sleep(60)  # Проверяем каждую минуту
 
+dp.startup.register(set_main_menu)
+
 if __name__ == '__main__':
     import asyncio
     from aiohttp import web
@@ -732,16 +734,21 @@ if __name__ == '__main__':
     async def main():
         # Запускаем бота в фоне
         asyncio.create_task(dp.start_polling(bot))
-        # Запускаем aiohttp сервер для рендера
+
+        # Запускаем aiohttp сервер для проверки
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, '0.0.0.0', 8080)
         await site.start()
+
         print("Bot is running...")
+
+        # Чтобы процесс не завершался
         while True:
             await asyncio.sleep(3600)
 
     asyncio.run(main())
+
 
 
 
