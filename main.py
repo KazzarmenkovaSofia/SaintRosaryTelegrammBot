@@ -17,6 +17,7 @@ from openai import OpenAI
 import os
 from aiogram import Bot, types
 from aiogram.types import FSInputFile
+from aiohttp import web
 
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
@@ -643,11 +644,41 @@ async def send_echo(message: Message):
     await message.reply(text=message.text)
 
 
-dp.startup.register(set_main_menu)
+async def handle(request):
+    return web.Response(text="Rosary bot is running 🙏")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", handle)
+    port = int(os.getenv("PORT", 8080))  # Render автоматически даёт PORT
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+
+
+async def on_startup():
+    await set_main_menu(bot)
+    # Запускаем фоновую задачу с уведомлениями
+    asyncio.create_task(process_start_command_for_all_users())
+
+async def process_start_command_for_all_users():
+    while True:
+        for user_id in user_data.keys():
+            current_time = datetime.now().time()
+            if not user['in_pray'] and not user['pray_done'] and current_time.hour == 20 and current_time.minute == 30:
+                try:
+                    await bot.send_message(user_id, f'⏰ ¡Es hora de rezar el Rosario! ({datetime.now().hour}:{datetime.now().minute})')
+                except Exception as e:
+                    logging.error(f"Error enviando notificación a {user_id}: {e}")
+        await asyncio.sleep(60)  # Проверяем каждую минуту
+
 if __name__ == '__main__':
+    dp.startup.register(on_startup)
     dp.run_polling(bot)
-    loop = asyncio.new_event_loop()
-    loop.create_task(process_start_command(Message))
+
+
 
 
 
