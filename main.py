@@ -334,21 +334,26 @@ async def language_callback(callback: CallbackQuery):
 
     await callback.answer()
 
+
+def get_mystery_type():
+    wday = datetime.now().weekday()
+    if wday == 0 or wday == 5:
+        return 'gaudiosa'
+    elif wday == 3:
+        return 'luminosa'
+    elif wday == 1 or wday == 4:
+        return 'dolorosa'
+    else:
+        return 'gloriosa'
+        
 # Этот хэндлер будет срабатывать на команду "/pray"
 @dp.callback_query(F.data == 'pray_pressed')
 async def answer(callback: CallbackQuery):
-    current_date = datetime.now()
-    wday = current_date.weekday()
     global m_type, message_list, orarCombiar, oracionVercion
-    if wday == 0 or wday == 5:
-        m_type = 'gaudiosa'
-    elif wday == 3:
-        m_type = 'luminosa'
-    elif wday == 1 or wday == 4:
-        m_type = 'dolorosa'
-    else:
-        m_type = 'gloriosa'
-
+       user_id = callback.from_user.id
+     # Определяем тип таинства для текущего пользователя
+    m_type = get_mystery_type()
+# Формируем список сообщений для молитвы
     message_list = [
         rosario.mysteries[m_type][language],
         rosario.paterNoster[language],
@@ -356,10 +361,42 @@ async def answer(callback: CallbackQuery):
         rosario.oratioFatimae[language],
         rosario.MariaMadreDeGracia[language]
     ]
-    if not user['in_pray']:
-        user['in_pray'] = True
-        orarCombiar['perSigniumcrucis'] = True
-        oracionVercion = "original"
+
+    # Создаём объект состояния пользователя, если его нет
+    if user_id not in user_state:
+        user_state[user_id] = {
+            'in_pray': True,
+            'pray_done': False,
+            'cycleOraciones': False,
+            'current_message': 0,
+            'cycle': 0,
+            'mystery_index': 0,
+            'message_list': message_list,
+            'orarCombiar': {'perSigniumcrucis': True, 'padre': False},
+            'oracionVercion': 'original',
+            'aveMtimes': 0
+        }
+
+    state = user_state[user_id]
+
+    # Если молитва не запущена
+    if not state['in_pray']:
+        state['in_pray'] = True
+        state['orarCombiar']['perSigniumcrucis'] = True
+        state['oracionVercion'] = "original"
+
+        # Отправляем картинку с подписью
+        photo = FSInputFile("persignum.jpg")
+        await callback.message.answer_photo(
+            photo, 
+            caption=f'{rosario.perSigniumcrucis[language]}', 
+            reply_markup=porSignum_keyboard
+        )
+    else:
+        await callback.message.answer(
+            text='El comando de oración ya está en ejecución. Para continuar, haga clic en "Continuar"',
+            reply_markup=keyboard
+        )
 
         # Send image with prayer text as caption
         photo = FSInputFile("persignum.jpg")
@@ -685,6 +722,7 @@ async def process_start_command_for_all_users():
 if __name__ == '__main__':
     dp.startup.register(on_startup)
     dp.run_polling(bot)
+
 
 
 
