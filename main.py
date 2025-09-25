@@ -18,12 +18,17 @@ from aiohttp import web
 import rosario  # твой модуль с молитвами
 
 # ================== Настройки ==================
-BOT_TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_БОТА")
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "ВАШ_API_KEY")
+BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
+
+TOGETHER_API_KEY = "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1"
+
+client = OpenAI(
+    api_key=TOGETHER_API_KEY,
+    base_url="https://api.together.xyz/v1"
+)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-client = OpenAI(api_key=TOGETHER_API_KEY, base_url="https://api.together.xyz/v1")
 
 logging.basicConfig(level=logging.INFO)
 
@@ -245,3 +250,4 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 8080))
     web.run_app(app, host="0.0.0.0", port=port)
+
