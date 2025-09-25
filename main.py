@@ -150,7 +150,7 @@ async def language_callback(callback: CallbackQuery):
 # ================== Логика молитвы ==================
 @dp.callback_query(F.data == 'pray_pressed')
 async def start_prayer(callback: CallbackQuery):
-    global current_message, cycleOraciones
+    global m_type, message_list, orarCombiar, oracionVercion
     user_id = callback.from_user.id
     m_type = get_mystery_type()
     messages = [
@@ -250,4 +250,5 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 8080))
     web.run_app(app, host="0.0.0.0", port=port)
+
 
