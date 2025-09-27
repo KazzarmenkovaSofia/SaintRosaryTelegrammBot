@@ -649,19 +649,36 @@ async def send_echo(message: Message):
 # Новое окончание бота
 
 async def handle(request):
-    return web.Response(text="Bot is running")
+    return web.Response(text="Bot is running 🙏")
 
-async def on_startup(app):
-    # Запуск aiogram при старте веб-приложения
-    import asyncio
-    asyncio.create_task(dp.start_polling(bot))
+async def main():
+    try:
+        # Запускаем polling
+        polling_task = asyncio.create_task(dp.start_polling(bot))
 
-app = web.Application()
-app.router.add_get("/", handle)
+        # Запускаем aiohttp сервер для Render
+        app = web.Application()
+        app.router.add_get("/", handle)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        port = int(os.getenv("PORT", 10000))
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
+
+        print(f"Bot is running on port {port}")
+
+        # Чтобы процесс не завершался
+        await polling_task
+
+    finally:
+        # закрываем сессию бота корректно
+        await bot.session.close()
+
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    web.run_app(app, host="0.0.0.0", port=port)
+    asyncio.run(main())
+
+
 
 
 
