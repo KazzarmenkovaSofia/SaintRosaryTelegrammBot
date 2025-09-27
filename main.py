@@ -334,11 +334,11 @@ async def answer(callback: CallbackQuery):
 
     await callback.message.answer(text=f'dia {wday}', reply_markup=keyboard)
     
-    if wday == 0 or wday == 5:
+    if wday == 1 or wday == 6:
         m_type = 'gaudiosa'
-    elif wday == 3:
+    elif wday == 4:
         m_type = 'luminosa'
-    elif wday == 1 or wday == 4:
+    elif wday == 2 or wday == 5:
         m_type = 'dolorosa'
     else:
         m_type = 'gloriosa'
@@ -651,6 +651,7 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
+
 
 
 
