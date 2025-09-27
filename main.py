@@ -289,18 +289,6 @@ async def process_start_command(message: Message):
     selected = await message.answer("Aún no has seleccionado un idioma.")
     user_data[message.from_user.id] = selected.message_id
     user_id = message.from_user.id
-    while True:
-        current_time = datetime.now().time()
-        global user
-        if current_time.hour == 23 and current_time.minute == 59:
-            user = {
-                'in_pray': False,
-                'pray_done': False
-            }
-        elif not user['in_pray'] and not user['pray_done'] and current_time.hour > 20 and current_time.minute == 30:
-            await bot.send_message(user_id, f'Время: {datetime.now().hour}:{datetime.now().minute}')
-            await asyncio.sleep(60)
-        await asyncio.sleep(60)
 
 
 @dp.callback_query(F.data.startswith("lang:"))
@@ -675,6 +663,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
