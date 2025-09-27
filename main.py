@@ -639,6 +639,9 @@ async def handle(request):
 
 async def main():
     try:
+        # Удаляем старый webhook (если был)
+        await bot.delete_webhook()
+
         # Запускаем polling
         polling_task = asyncio.create_task(dp.start_polling(bot))
 
@@ -661,8 +664,10 @@ async def main():
         await bot.session.close()
 
 
+
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
