@@ -331,9 +331,6 @@ async def answer(callback: CallbackQuery):
     current_date = datetime.now()
     wday = current_date.weekday()
     global m_type, message_list, orarCombiar, oracionVercion
-    await callback.message.answer(text=wday, reply_markup=keyboard)
-
-@dp.callback_query(F.data == 'continuar_pressed')
     if wday == 0 or wday == 5:
         m_type = 'gaudiosa'
     elif wday == 3:
@@ -651,7 +648,6 @@ if __name__ == '__main__':
     dp.run_polling(bot)
     loop = asyncio.new_event_loop()
     loop.create_task(process_start_command(Message))
-
 
 
 
