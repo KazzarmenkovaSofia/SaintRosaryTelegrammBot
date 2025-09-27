@@ -18,15 +18,13 @@ import os
 from aiogram import Bot, types
 from aiogram.types import FSInputFile
 
-# Use environment variables for sensitive data
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-TOGETHER_API_KEY = os.getenv('TOGETHER_API_KEY')
+# Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
+BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
 
-if not BOT_TOKEN or not TOGETHER_API_KEY:
-    raise ValueError("BOT_TOKEN and TOGETHER_API_KEY environment variables must be set")
+TOGETHER_API_KEY = os.getenv("09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1")
 
 client = OpenAI(
-    api_key=TOGETHER_API_KEY,
+    api_key="09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1",
     base_url="https://api.together.xyz/v1"
 )
 # Создаем объекты бота и диспетчера
@@ -231,7 +229,7 @@ def generate_prayers(links):
         ]
     )
 
-    return response.choices[0].message.content.strip()
+    answer = response.choices[0].message.content
 
 # Создаем асинхронную функцию
 async def set_main_menu(bot: Bot):
@@ -245,18 +243,9 @@ async def set_main_menu(bot: Bot):
     await bot.set_my_commands(main_menu_commands)
 
 
-# Establecer idioma por defecto
-try:
-    # Intentar obtener el idioma del sistema
-    system_locale = locale.getlocale()[0]
-    if system_locale:
-        language = system_locale.partition('_')[0].lower()
-    else:
-        language = 'español'
-except:
-    language = 'español'
+# Узнаем язык устройства
+language = locale.getlocale()[0].partition('_')[0].lower()
 
-# Por defecto usar español
 language = 'español'
 
 #Указываем информацию о пользователе
@@ -306,8 +295,8 @@ async def process_start_command(message: Message):
                 'in_pray': False,
                 'pray_done': False
             }
-        elif not user['in_pray'] and not user['pray_done'] and current_time.hour == 21 and current_time.minute == 30:
-            await bot.send_message(user_id, f'Tiempo: {datetime.now().hour}:{datetime.now().minute}')
+        elif not user['in_pray'] and not user['pray_done'] and current_time.hour > 20 and current_time.minute == 30:
+            await bot.send_message(user_id, f'Время: {datetime.now().hour}:{datetime.now().minute}')
             await asyncio.sleep(60)
         await asyncio.sleep(60)
 
@@ -367,7 +356,6 @@ async def answer(callback: CallbackQuery):
         await callback.message.answer_photo(photo, caption=f'{rosario.perSigniumcrucis[language]}', reply_markup=porSignum_keyboard)
     else:
         await callback.message.answer(text=f'El comando de oración ya está en ejecución. Para continuar, haga clic en "Continuar"', reply_markup=keyboard)
-
 
 @dp.callback_query(F.data == 'continuar_pressed')
 async def answer(callback: CallbackQuery):
@@ -432,7 +420,7 @@ async def answer(callback: CallbackQuery):
 @dp.callback_query(F.data == 'peticiones_pressed')
 async def answer(callback: CallbackQuery):
     global cycleOraciones
-    await callback.message.answer(text=f'Pensale de tus peticiones:\n\n🙏 Se pronuncia la intención en la que se recita el Rosario. \nPuedes decir la oración inicial:\n\n"¡Señor nuestro Jesucristo!\nDedico / Te dedicamos / A Ti este santo Rosario para gloria de Tu nombre,\nen honor de Vuestra Madre Purísima y por la salvación de las almas" 🙏', reply_markup=peticiones_keyboard)
+    await callback.message.answer(text=f'Pensale de tus peticiones:\n\n🙏 Se pronuncia la intención en la que se recita el Rosario. \nPuedes decir la oración inicial:\n\n“¡Señor nuestro Jesucristo!\nDedico / Te dedicamos / A Ti este santo Rosario para gloria de Tu nombre,\nen honor de Vuestra Madre Purísima y por la salvación de las almas" 🙏', reply_markup=peticiones_keyboard)
     cycleOraciones = True
 
 
@@ -442,15 +430,15 @@ async def send_prayers(callback: CallbackQuery):
     links = get_news_links()
 
     if not links:
-        await callback.message.edit_text("⚠️ No se pudieron encontrar noticias recientes para analizar.", reply_markup=peticiones_dia_keyboard)
+        await callback.message.edit_text("⚠️ Не удалось найти свежих новостей для анализа.", reply_markup=peticiones_dia_keyboard)
         return
 
     try:
         prayers = generate_prayers(links)
         await callback.message.edit_text(f"🙏 Peticiones:\n\n{prayers}", reply_markup=peticiones_dia_keyboard, parse_mode=ParseMode.HTML)
     except Exception as e:
-        logging.error(f"Error al contactar AI: {e}")
-        await callback.message.edit_text("🚫 Ocurrió un error al generar la oración. Inténtalo más tarde.", reply_markup=peticiones_dia_keyboard)
+        logging.error(f"Ошибка при обращении к AI: {e}")
+        await callback.message.edit_text("🚫 Произошла ошибка при генерации молитвы. Попробуй позже.", reply_markup=peticiones_dia_keyboard)
 
 
 # Обработчик для изменения языка
@@ -459,16 +447,16 @@ async def ask_question(query):
     global oracionVercion, orarCombiar, rosario, mystery, message_list, user, cycleOraciones, cycle, current_message
     if oracionVercion == "" or oracionVercion == "original":
         if orarCombiar['perSigniumcrucis']:
-            await query.message.edit_caption(caption=f'{rosario.perSigniumcrucis["latin"]}', reply_markup=porSignum_keyboard)
+            await query.message.edit_caption(caption=f'{rosario.perSigniumcrucis['latin']}', parse_mode="HTML", reply_markup=porSignum_keyboard)
         elif orarCombiar['padre']:
-            await query.message.edit_text(text=f'{rosario.paterNoster["latin"]}', reply_markup=ave_keyboard)
+            await query.message.edit_text(text=f'{rosario.paterNoster['latin']}', reply_markup=ave_keyboard)
         else:
-            await query.message.edit_text(text=f'{rosario.gloria["latin"]}', reply_markup=latin_keyboard)
+            await query.message.edit_text(text=f'{rosario.gloria['latin']}', reply_markup=latin_keyboard)
 
         oracionVercion = "latin"
     else:
         if orarCombiar['perSigniumcrucis']:
-            await query.message.edit_caption(caption=f'{rosario.perSigniumcrucis[language]}', reply_markup=porSignum_keyboard)
+            await query.message.edit_caption(caption=f'{rosario.perSigniumcrucis[language]}', parse_mode="HTML", reply_markup=porSignum_keyboard)
         elif orarCombiar['padre']:
             await query.message.edit_text(text=f'{rosario.paterNoster[language]}', reply_markup=ave_keyboard)
         else:
@@ -598,21 +586,35 @@ async def answer(callback: CallbackQuery):
     current_message += 1
 
     if current_message == 0:
-        await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard_beginning)
-    elif current_message < len(rosario.letaniasDeLaVirgenMessage) - 1:
-        await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard)
+        await callback.message.edit_text(
+            text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}',
+            parse_mode='Markdown',
+            reply_markup=let_cycle_keyboard_beginning
+        )
     elif current_message == len(rosario.letaniasDeLaVirgenMessage) - 1:
-        await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard_last)
+        await callback.message.edit_text(
+            text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}',
+            parse_mode='Markdown',
+            reply_markup=let_cycle_keyboard_last
+        )
+    elif current_message > len(rosario.letaniasDeLaVirgenMessage) - 1:
+        # Чтобы не выйти за пределы массива
+        current_message = len(rosario.letaniasDeLaVirgenMessage) - 1
+    else:
+        await callback.message.edit_text(
+            text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}',
+            parse_mode='Markdown',
+            reply_markup=let_cycle_keyboard
+        )
 
 
 @dp.callback_query(F.data == 'let_cycle_answer_pressed_back')
 async def answer(callback: CallbackQuery):
     global current_message
     current_message -= 1
-
     if current_message == 0:
         await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard_beginning)
-    elif current_message < len(rosario.letaniasDeLaVirgenMessage) - 1:
+    elif current_message <= 12:
         await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard)
     else:
         await callback.message.edit_text(text=f'{rosario.letaniasDeLaVirgenMessage[current_message]}', parse_mode='Markdown', reply_markup=let_cycle_keyboard_last)
@@ -620,48 +622,31 @@ async def answer(callback: CallbackQuery):
 
 @dp.callback_query(F.data == 'let_fin_pressed')
 async def answer(callback: CallbackQuery):
-    global current_message, user
-    await callback.message.answer(text=f'{rosario.orarPorElPapa[language]}', reply_markup=ruega_keyboard)
-    user['pray_done'] = True
-    user['in_pray'] = False
-
-
+    global cycleOraciones, current_message
+    current_message = 0
+    await callback.message.answer(text=f'{rosario.bajoTuAmparo[language]}', reply_markup=ruega_keyboard)
+    cycleOraciones = False
 @dp.callback_query(F.data == 'ruega_pressed')
 async def answer(callback: CallbackQuery):
-    global current_message, cycle, mystery, answerNumber, aveMtimes, aveVercion, oracionVercion, m_type, row, message_list, beforeCycleList, orarCombiar, CallbackTypeAve, keyboard_letania, user
-    await callback.message.answer(text=f'{rosario.finalMessage[language]}')
-    current_message = 0
-    cycle = 0
-    mystery = 0
-    answerNumber = 0
-    aveMtimes = 0
-    aveVercion = ''
-    oracionVercion = ''
-    m_type = ''
-    row = 0
-    message_list = []
-    beforeCycleList = [
-        rosario.venEspirituSanto[language],
-        rosario.credo[language]
-    ]
-    orarCombiar = {
-        'perSigniumcrucis': False,
-        'padre': False
-    }
-
-    CallbackTypeAve = ''
-
-    keyboard_letania = ''
-    user = {
-        'in_pray': False,
-        'pray_done': True
-    }
+    global cycleOraciones
+    await callback.message.answer(text=f'*Guía:* Ruega por nosotros Santa Madre de Dios\n*Todos:* Para que seamos dignos de las promesas de Cristo\n\n Amen', parse_mode='Markdown')
+    await callback.answer(text='La oración ha terminado\n\nDios lo bendiga')
+    cycleOraciones = False
 
 
-async def main():
-    await set_main_menu(bot)
-    await dp.start_polling(bot)
+# Этот хэндлер будет срабатывать на любые ваши текстовые сообщения,
+# кроме команд "/start" и "/help"
+@dp.message()
+async def send_echo(message: Message):
+    await message.reply(text=message.text)
 
 
+dp.startup.register(set_main_menu)
 if __name__ == '__main__':
-    asyncio.run(main())
+    dp.run_polling(bot)
+    loop = asyncio.new_event_loop()
+    loop.create_task(process_start_command(Message))
+
+
+
+
