@@ -17,6 +17,7 @@ from openai import OpenAI
 import os
 from aiogram import Bot, types
 from aiogram.types import FSInputFile
+from aiohttp import web
 
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
@@ -645,12 +646,23 @@ async def answer(callback: CallbackQuery):
 async def send_echo(message: Message):
     await message.reply(text=message.text)
 
+# Новое окончание бота
 
-dp.startup.register(set_main_menu)
-if __name__ == '__main__':
-    dp.run_polling(bot)
-    loop = asyncio.new_event_loop()
-    loop.create_task(process_start_command(Message))
+async def handle(request):
+    return web.Response(text="Bot is running")
+
+async def on_startup(app):
+    # Запуск aiogram при старте веб-приложения
+    import asyncio
+    asyncio.create_task(dp.start_polling(bot))
+
+app = web.Application()
+app.router.add_get("/", handle)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    web.run_app(app, host="0.0.0.0", port=port)
+
 
 
 
