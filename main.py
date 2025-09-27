@@ -332,8 +332,6 @@ async def answer(callback: CallbackQuery):
     current_date = datetime.now()
     wday = current_date.weekday()
     global m_type, message_list, orarCombiar, oracionVercion
-
-    await callback.message.answer(text=f'dia {wday}', reply_markup=keyboard)
     
     if wday == 1 or wday == 6:
         m_type = 'gaudiosa'
@@ -677,6 +675,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
