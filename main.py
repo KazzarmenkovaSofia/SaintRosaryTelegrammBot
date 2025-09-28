@@ -321,11 +321,11 @@ async def answer(callback: CallbackQuery):
     wday = current_date.weekday()
     global m_type, message_list, orarCombiar, oracionVercion
     
-    if wday == 1 or wday == 6:
+    if wday == 0 or wday == 5:
         m_type = 'gaudiosa'
-    elif wday == 4:
+    elif wday == 3:
         m_type = 'luminosa'
-    elif wday == 2 or wday == 5:
+    elif wday == 1 or wday == 4:
         m_type = 'dolorosa'
     else:
         m_type = 'gloriosa'
@@ -667,6 +667,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
