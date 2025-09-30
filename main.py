@@ -632,32 +632,43 @@ async def answer(callback: CallbackQuery):
 async def send_echo(message: Message):
     await message.reply(text=message.text)
 
+# обработчик апдейтов от Telegram
+async def webhook_handler(request):
+    update = await request.json()
+    await dp.feed_update(bot, update)
+    return web.Response()
+
 # Новое окончание бота
 
 async def handle(request):
     return web.Response(text="Bot is running 🙏")
 
 async def main():
-    try:
-        # Удаляем старый webhook (если был)
-        await bot.delete_webhook()
+        # Устанавливаем webhook
+        base_url = os.getenv("https://saintrosarytelegrammbot-1.onrender.com")
+        if not base_url:
+            raise RuntimeError("⚠️ Не найден RENDER_EXTERNAL_URL в переменных окружения!")
 
-        # Запускаем polling
-        polling_task = asyncio.create_task(dp.start_polling(bot))
+        WEBHOOK_URL = base_url + "/webhook"
+        await bot.set_webhook(WEBHOOK_URL)
 
-        # Запускаем aiohttp сервер для Render
+        # aiohttp сервер
         app = web.Application()
-        app.router.add_get("/", handle)
+        app.router.add_get("/", handle)             # главная страница
+        app.router.add_post("/webhook", webhook_handler)  # сюда Telegram присылает апдейты
+
         runner = web.AppRunner(app)
         await runner.setup()
         port = int(os.getenv("PORT", 10000))
         site = web.TCPSite(runner, "0.0.0.0", port)
         await site.start()
 
-        print(f"Bot is running on port {port}")
+        print(f"✅ Bot is running on port {port}, webhook set to {WEBHOOK_URL}")
 
         # Чтобы процесс не завершался
-        await polling_task
+        while True:
+            await asyncio.sleep(3600)
+
 
     finally:
         # закрываем сессию бота корректно
@@ -667,20 +678,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
