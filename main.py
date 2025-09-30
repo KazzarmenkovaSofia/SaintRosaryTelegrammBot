@@ -22,13 +22,6 @@ from aiohttp import web
 # Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
 BOT_TOKEN = '7247038755:AAE2GEPMR-XDaoFoTIZWidwH-ZQfD7g36pE'
 
-# Путь вебхука
-WEBHOOK_PATH = https://saintrosarytelegrammbot-1.onrender.com
-
-# URL, который Telegram будет вызывать
-# Пример для Render: https://your-app-name.onrender.com/webhook
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # укажи в настройках Render
-
 TOGETHER_API_KEY = "09392b9d19cab71d0a2300b1df5ca81df0b78a1f97457528d4ef53f5e25c60c1"
 
 client = OpenAI(
@@ -641,48 +634,39 @@ async def send_echo(message: Message):
 
 # Новое окончание бота
 
-# --------- GET endpoint для проверки ---------
 async def handle(request):
     return web.Response(text="Bot is running 🙏")
 
-# --------- POST endpoint для Telegram webhook ---------
-async def webhook(request):
-    update = await request.json()
-    await dp.feed_update(bot, update)
-    return web.Response(text="OK")
-
-# --------- main ---------
 async def main():
-    # Удаляем старый webhook (если был)
-    await bot.delete_webhook()
+    try:
+        # Удаляем старый webhook (если был)
+        await bot.delete_webhook()
 
-    # Устанавливаем новый webhook
-    if WEBHOOK_URL:
-        await bot.set_webhook(WEBHOOK_URL + WEBHOOK_PATH)
-        print(f"Webhook установлен: {WEBHOOK_URL + WEBHOOK_PATH}")
-    else:
-        print("⚠️ Не указан WEBHOOK_URL. Установи переменную в Render")
+        # Запускаем polling
+        polling_task = asyncio.create_task(dp.start_polling(bot))
 
-    # Создаем aiohttp сервер
-    app = web.Application()
-    app.router.add_get("/", handle)
-    app.router.add_post(WEBHOOK_PATH, webhook)
+        # Запускаем aiohttp сервер для Render
+        app = web.Application()
+        app.router.add_get("/", handle)
+        runner = web.AppRunner(app)
+        await runner.setup()
+        port = int(os.getenv("PORT", 10000))
+        site = web.TCPSite(runner, "0.0.0.0", port)
+        await site.start()
 
-    runner = web.AppRunner(app)
-    await runner.setup()
-    port = int(os.getenv("PORT", 10000))  # Render сам задает PORT
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
+        print(f"Bot is running on port {port}")
 
-    print(f"Bot сервер запущен на порту {port}")
-    # Чтобы процесс не завершался
-    while True:
-        await asyncio.sleep(3600)
+        # Чтобы процесс не завершался
+        await polling_task
 
-# --------- Запуск ---------
+    finally:
+        # закрываем сессию бота корректно
+        await bot.session.close()
+
+
+
 if __name__ == "__main__":
     asyncio.run(main())
-
 
 
 
