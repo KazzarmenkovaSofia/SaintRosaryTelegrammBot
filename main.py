@@ -644,8 +644,9 @@ async def handle(request):
     return web.Response(text="Bot is running 🙏")
 
 async def main():
-        # Устанавливаем webhook
-        base_url = os.getenv("https://saintrosarytelegrammbot-1.onrender.com")
+    try:
+        # Берем URL проекта из переменной окружения Render
+        base_url = os.getenv("RENDER_EXTERNAL_URL")
         if not base_url:
             raise RuntimeError("⚠️ Не найден RENDER_EXTERNAL_URL в переменных окружения!")
 
@@ -669,7 +670,6 @@ async def main():
         while True:
             await asyncio.sleep(3600)
 
-
     finally:
         # закрываем сессию бота корректно
         await bot.session.close()
@@ -678,5 +678,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
