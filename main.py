@@ -186,7 +186,7 @@ pray_keyboard = InlineKeyboardMarkup(
 
 
 # Вызов AI
-def generate_prayers(links):
+def generate_prayers():
     response = client.chat.completions.create(
         model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
         messages=[
@@ -642,6 +642,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
