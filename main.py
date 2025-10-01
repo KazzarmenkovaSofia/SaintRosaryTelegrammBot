@@ -184,48 +184,23 @@ pray_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[[pray]])
 
 
-# Получение новостей
-def get_news_links():
-    current_date = datetime.now()
-    formatted_date = current_date.strftime('%Y-%m')
-    url = 'https://www.vaticannews.va/ru.html'
-    response = requests.get(url)
-    response.encoding = 'utf-8'
-
-    links = []
-
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        articles = soup.find_all('a', href=True, title=True)
-
-        for article in articles:
-            link = f"https://www.vaticannews.va{article['href']}"
-            if f'/ru/pope/news/{formatted_date}' in link and link not in links:
-                links.append(link)
-
-    return links
-
-
 
 # Вызов AI
 def generate_prayers(links):
-    joined_links = "\n\n".join(links)
-
     response = client.chat.completions.create(
         model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
         messages=[
             {
                 "role": "user",
                 "content": (
-                    "Read the following news articles, excluding irrelevant events from the perspective of Catholicism. "
+                    "Find 5 the most important news of the world"
                     "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
                     "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
                     "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
                     "Avoid breaking the text into separate words or elements. "
                     "The prayer should express a desire for peace, blessings, and help for those in need. "
                     "Provide the result in a clean, readable text format with clear prayer intentions:\n\n"
-                    f"{joined_links}\n\n"
-                    "Write your result en spanish without numeration and finish with 'Amén'."
+                    "Write your result en spanish without numeration but with sign 🙏 and finish with 'Amén'."
                 )
             }
         ]
@@ -667,6 +642,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
