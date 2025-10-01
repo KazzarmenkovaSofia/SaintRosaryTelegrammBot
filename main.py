@@ -193,9 +193,8 @@ def generate_prayers():
             {
                 "role": "user",
                 "content": (
-                    "Find 5 the most important news of the world"
-                    "Only consider news related to faith, spirituality, human rights, social issues, peace, health, and other important topics from a moral standpoint. "
-                    "Based on these news items, formulate one or more prayer intentions for the Holy Rosary. "
+                    "Read homily of the day en this page https://evangeli.net/evangelio "
+                    "Based on these homily and explicayions, formulate one or more prayer intentions for the Holy Rosary. "
                     "Each prayer intention should be a brief, complete sentence or a paragraph, in the form of a prayer. "
                     "Avoid breaking the text into separate words or elements. "
                     "The prayer should express a desire for peace, blessings, and help for those in need. "
@@ -642,6 +641,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
