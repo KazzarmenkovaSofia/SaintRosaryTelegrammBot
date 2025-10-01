@@ -259,6 +259,9 @@ keyboard_letania = ''
 # Этот хэндлер будет срабатывать на команду "/start"
 @dp.message(Command(commands=["start"]))
 async def process_start_command(message: Message):
+    global cycleOraciones, current_message
+    current_message = 0
+    cycleOraciones = False
     await message.answer(f'{rosario.textStart[language]}', reply_markup=get_language_keyboard())
     selected = await message.answer("Aún no has seleccionado un idioma.")
     user_data[message.from_user.id] = selected.message_id
@@ -635,6 +638,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
