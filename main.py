@@ -392,14 +392,8 @@ async def answer(callback: CallbackQuery):
 @dp.callback_query(F.data == 'peticiones_dia')
 async def send_prayers(callback: CallbackQuery):
     await callback.message.edit_text(text=f'⏳ Preparamos peticiones relevantes ⌛', reply_markup=peticiones_dia_keyboard)
-    links = get_news_links()
-
-    if not links:
-        await callback.message.edit_text("⚠️ Не удалось найти свежих новостей для анализа.", reply_markup=peticiones_dia_keyboard)
-        return
-
     try:
-        prayers = generate_prayers(links)
+        prayers = generate_prayers()
         await callback.message.edit_text(f"🙏 Peticiones:\n\n{prayers}", reply_markup=peticiones_dia_keyboard, parse_mode=ParseMode.HTML)
     except Exception as e:
         logging.error(f"Ошибка при обращении к AI: {e}")
@@ -641,6 +635,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
